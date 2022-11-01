@@ -128,6 +128,9 @@ int SymTable_put(SymTable_T oSymTable, const char *pcKey, const void *pvValue) {
           oSymTable->size != auBucketCounts[length - 1]))
         return 1;
 
+    /* Uncomment below to use non-expanding hash table implementation. */
+    /* if(1) return 1; */
+
     /* Expand hash table and increase the of buckets if we're not already at the
      * maximum size and if the number of bindings equals the number of buckets.
      */
