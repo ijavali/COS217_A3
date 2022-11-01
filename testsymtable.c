@@ -110,18 +110,14 @@ static void testBasics(void)
    fflush(stdout);
 
    /* Test SymTable_new(). */
+
    oSymTable = SymTable_new();
    ASSURE(oSymTable != NULL);
-   printf("-- Made new\n");
-   fflush(stdout);
 
    /* Test SymTable_put() and SymTable_getLength(). */
 
-printf("-- Adding stuff\n");
-   fflush(stdout);
    iSuccessful = SymTable_put(oSymTable, acJeter, acShortstop);
    ASSURE(iSuccessful);
-/* CUSTOM */
 
    uLength = SymTable_getLength(oSymTable);
    ASSURE(uLength == 1);
@@ -180,6 +176,7 @@ printf("-- Adding stuff\n");
    ASSURE(! iFound);
 
    /* Test SymTable_get(). */
+
    pcValue = (char*)SymTable_get(oSymTable, acJeter);
    ASSURE(pcValue == acShortstop);
 
@@ -197,7 +194,6 @@ printf("-- Adding stuff\n");
 
    pcValue = (char*)SymTable_get(oSymTable, "Maris");
    ASSURE(pcValue == NULL);
-
    
    /* Test SymTable_replace(). */
 
@@ -235,9 +231,7 @@ printf("-- Adding stuff\n");
 
    uLength = SymTable_getLength(oSymTable);
    ASSURE(uLength == 5);
- /* CUSTOM */
-printf("--- Fails here:\n");
-fflush(stdout);
+ 
 
    /* Test SymTable_free(). */
 
@@ -832,10 +826,7 @@ static void testLargeTable(int iBindingCount)
       strcpy(pcValue, acKey);
       iSuccessful = SymTable_put(oSymTable, acKey, pcValue);
       ASSURE(iSuccessful);
-      /* printf(" _TESST_ "); */
       uLength = SymTable_getLength(oSymTable);
-      /* printf("%d vs %d", uLength, (i+1)); */
-      fflush(stdout);
       ASSURE(uLength == (size_t)(i+1));
    }
 
