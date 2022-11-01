@@ -28,6 +28,7 @@ struct Binding {
 };
 
 struct SymTable {
+    /* array of buckets containig bindings (key-value pairs) */
     struct Binding *buckets[BUCKET_COUNT];
     /* Numer of bindings in symbol table */
     size_t numBindings;
@@ -55,6 +56,7 @@ SymTable_T SymTable_new() {
     int i = 0;
     if (symtable == NULL) return NULL;
     symtable->size = BUCKET_COUNT;
+    symtable->numBindings = 0;
     *symtable->buckets = (Binding *) calloc(BUCKET_COUNT, sizeof(Binding *));
     for(; i < BUCKET_COUNT; i++){
         symtable->buckets[i]=NULL;
@@ -121,15 +123,15 @@ void SymTable_free(SymTable_T oSymTable) {
             /* for each binding, free its key, value, then the binding */
             printf(" FREEING: %s\n", b->key);
             next = b->next;
-            free((char *) b->key);
+         /*    free((char *) b->key);
             free(b->value);
             printf( " DONE Free\n");
-            free(b->next);
+            free(b->next); */
             free(b);
             b = next;
         }
     }
-    free(oSymTable->buckets);
+    /* free(oSymTable->buckets); */
     free(oSymTable);
 }
 
@@ -195,9 +197,9 @@ void *SymTable_remove(SymTable_T oSymTable, const char *pcKey) {
             }
             value = b->value;
             oSymTable->numBindings--;
-            free((char *) b->key);
+           /*  free((char *) b->key);
             free(b->value);
-            free(b->next);
+            free(b->next); */
             free(b);
             return value;
         }

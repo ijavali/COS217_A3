@@ -17,92 +17,63 @@ enum { BUCKET_COUNT = 509 };
 static size_t auBucketCounts[] = {509,  1021,  2039,  4093,
                                   8191, 16381, 32749, 65521};
 
-typedef struct Binding Binding;
-struct Binding {
+typedef struct Node Node;
+struct Node {
     /* Key for the binding */
     const char *key;
     /* Value associated with the key */
     void *value;
-    /* The next key-value pair in the bucket */
-    struct Binding *next;
+    /* The next key-value pair in the linked list */
+    struct Node *next;
 };
 
 struct SymTable {
-    struct Binding *buckets[BUCKET_COUNT];
+    /* The first node in the linked list */
+    struct Node *first;
     /* Numer of bindings in symbol table */
     size_t numBindings;
     /* Number of buckets in symbol table */
     size_t size;
 };
 
-/* Return a hash code for pcKey that is between 0 and uBucketCount-1,
-   inclusive. */
-static size_t SymTable_hash(const char *pcKey, size_t uBucketCount) {
-    const size_t HASH_MULTIPLIER = 65599;
-    size_t u;
-    size_t uHash = 0;
-
-    assert(pcKey != NULL);
-
-    for (u = 0; pcKey[u] != '\0'; u++)
-        uHash = uHash * HASH_MULTIPLIER + (size_t)pcKey[u];
-
-    return uHash % uBucketCount;
-}
-
 SymTable_T SymTable_new() {
-    SymTable_T symtable = (struct SymTable*) malloc(sizeof(SymTable_T));
-    int i = 0;
+    SymTable_T symtable = (struct SymTable *)malloc(sizeof(SymTable_T));
     if (symtable == NULL) return NULL;
     symtable->size = BUCKET_COUNT;
-    *symtable->buckets = (Binding *) calloc(BUCKET_COUNT, sizeof(Binding *));
-    for(; i < BUCKET_COUNT; i++){
-        symtable->buckets[i]=NULL;
-    }
+    symtable->numBindings = 0;
+    symtable->first = NULL;
     return symtable;
 }
 
 int SymTable_put(SymTable_T oSymTable, const char *pcKey, const void *pvValue) {
-    size_t hash = SymTable_hash(pcKey, BUCKET_COUNT);
-    printf("  %d\n", hash);
-    printf("%d\n", oSymTable->size);
-    /* // printf("HELLO HERE\n"); */
-    Binding *b = oSymTable->buckets[hash];
-    Binding *prev = b;
-    Binding *binding;
-    while (b != NULL) {
-    /* printf("%s HELLO HERE\n", b->key); */
-        /* key already exists */
-        if (strcmp(b->key, pcKey) == 0) return 0;
-        prev = b;
-        b = b->next;
+    Node *head = oSymTable->first;
+    Node *prev;
+    Node *temp = (Node *)malloc(sizeof(Node));
+    if (temp == NULL) return 0;
+    temp->key = pcKey;
+    temp->value = (void *)pvValue;
+    temp->next = NULL;
+    if (head == NULL) {
+        oSymTable->first = temp;
+        oSymTable->numBindings++;
+        return 1;
     }
-    binding = (Binding *) malloc(sizeof(Binding));
-    if (binding == NULL) return 0;
-    binding->key = (const char *)malloc(strlen(pcKey) + 1);
-    strcpy((char *)binding->key, pcKey);
-    binding->value = (void *) pvValue;
-    binding->next = NULL;
-
-    /* the bucket is empty */
+    prev = head;
+    while (head != NULL) {
+        if (strcmp(head->key, pcKey) == 0) return 0;
+        prev = head;
+        head = head->next;
+    }
     oSymTable->numBindings++;
-    if (prev == b) {
-        oSymTable->buckets[hash] = binding;
-    } else {
-        prev->next = binding;
-    }
+    prev->next = temp;
     return 1;
 }
 
 int SymTable_contains(SymTable_T oSymTable, const char *pcKey) {
-    size_t hash = SymTable_hash(pcKey, BUCKET_COUNT);
-    printf(" -%ld\n", hash);
-    Binding *b = oSymTable->buckets[hash];
-    /* printf("%d\n", b); */
-    while (b != NULL) {
-        printf("%s\n", b->key);
-        if (strcmp(b->key, pcKey) == 0) return 1;
-        b = b->next;
+    Node *head = oSymTable->first;
+    while (head != NULL) {
+        if (strcmp(head->key, pcKey) == 0) return 1;
+        head = head->next;
     }
     return 0;
 }
@@ -112,24 +83,16 @@ size_t SymTable_getLength(SymTable_T oSymTable) {
 }
 
 void SymTable_free(SymTable_T oSymTable) {
-    size_t i = 0;
-    for (; i < BUCKET_COUNT; i++) {
-        /* for each bucket, get the first binding */
-        Binding *b = oSymTable->buckets[i];
-        Binding *next;
-        while (b != NULL) {
-            /* for each binding, free its key, value, then the binding */
-            printf(" FREEING: %s\n", b->key);
-            next = b->next;
-            free((char *) b->key);
-            free(b->value);
-            printf( " DONE Free\n");
-            free(b->next);
-            free(b);
-            b = next;
-        }
+    Node *head = oSymTable->first;
+    Node *temp;
+    while (head != NULL) {
+        temp = head;
+        head = head->next;
+        free((char *)temp->key);
+        free(temp->value);
+        free(temp->next);
+        free(temp);
     }
-    free(oSymTable->buckets);
     free(oSymTable);
 }
 
@@ -139,70 +102,56 @@ void SymTable_map(SymTable_T oSymTable,
                   void (*pfApply)(const char *pcKey, void *pvValue,
                                   void *pvExtra),
                   const void *pvExtra) {
-    size_t i = 0;
-    for (; i < oSymTable->size; i++) {
-        /* for each bucket, get the first binding */
-        Binding *b = oSymTable->buckets[i];
-        while (b != NULL) {
-            /* for each binding, apply the function */
-
-            pfApply(b->key, b->value, (void *)pvExtra);
-            b = b->next;
-        }
+    Node *head = oSymTable->first;
+    while (head != NULL) {
+        pfApply(head->key, head->value, (void *)pvExtra);
+        head = head->next;
     }
 }
 
 void *SymTable_get(SymTable_T oSymTable, const char *pcKey) {
-    size_t hash = SymTable_hash(pcKey, BUCKET_COUNT);
-    Binding *b = oSymTable->buckets[hash];
-    while (b != NULL) {
-        if (strcmp(b->key, pcKey) == 0) return b->value;
-        b = b->next;
+    Node *head = oSymTable->first;
+    while (head != NULL) {
+        if (strcmp(head->key, pcKey) == 0) return head->value;
+        head = head->next;
     }
     return NULL;
 }
 
-
-
 void *SymTable_replace(SymTable_T oSymTable, const char *pcKey,
                        const void *pvValue) {
-    size_t hash = SymTable_hash(pcKey, BUCKET_COUNT);
-    Binding *b = oSymTable->buckets[hash];
-    while (b != NULL) {
-        if (strcmp(b->key, pcKey) == 0) {
-            void *oldValue = b->value;
-            b->value = (void *) pvValue;
-            return oldValue;
+    Node *head = oSymTable->first;
+    while (head != NULL) {
+        if (strcmp(head->key, pcKey) == 0) {
+            void *original = head->value;
+            head->value = (void *)pvValue;
+            return original;
         }
-        b = b->next;
+        head = head->next;
     }
     return NULL;
 }
 
 void *SymTable_remove(SymTable_T oSymTable, const char *pcKey) {
-    size_t hash = SymTable_hash(pcKey, BUCKET_COUNT);
-    Binding *b = oSymTable->buckets[hash];
-    Binding *prev = b;
-    while (b != NULL) {
-        if (strcmp(b->key, pcKey) == 0) {
-            Binding *next = b->next;
-            void *value;
-            /* The first binding in the bucket is being removed */
-            if (prev == b) {
-                oSymTable->buckets[hash] = next;
+    Node *head = oSymTable->first;
+    Node *prev = head;
+    while (head != NULL) {
+        if (strcmp(head->key, pcKey) == 0) {
+            void *original = head->value;
+            if (head == prev) {
+                oSymTable->first = head->next;
             } else {
-                prev->next = next;
+                prev->next = head->next;
             }
-            value = b->value;
+            free((char *)head->key);
+            free(head->value);
+            free(head->next);
+            free(head);
             oSymTable->numBindings--;
-            free((char *) b->key);
-            free(b->value);
-            free(b->next);
-            free(b);
-            return value;
+            return original;
         }
-        prev = b;
-        b = b->next;
+        prev = head;
+        head = head->next;
     }
     return NULL;
 }

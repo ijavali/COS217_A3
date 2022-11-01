@@ -119,7 +119,8 @@ static void testBasics(void)
 
    iSuccessful = SymTable_put(oSymTable, acJeter, acShortstop);
    ASSURE(iSuccessful);
-   printf("-- Added stuff\n");
+/* CUSTOM */
+printf("-- Added stuff\n");
    fflush(stdout);
 
    uLength = SymTable_getLength(oSymTable);
@@ -234,7 +235,7 @@ static void testBasics(void)
 
    uLength = SymTable_getLength(oSymTable);
    ASSURE(uLength == 5);
- 
+ /* CUSTOM */
 printf("--- Fails here:\n");
 fflush(stdout);
 
