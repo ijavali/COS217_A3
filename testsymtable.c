@@ -832,7 +832,10 @@ static void testLargeTable(int iBindingCount)
       strcpy(pcValue, acKey);
       iSuccessful = SymTable_put(oSymTable, acKey, pcValue);
       ASSURE(iSuccessful);
+      /* printf(" _TESST_ "); */
       uLength = SymTable_getLength(oSymTable);
+      /* printf("%d vs %d", uLength, (i+1)); */
+      fflush(stdout);
       ASSURE(uLength == (size_t)(i+1));
    }
 
