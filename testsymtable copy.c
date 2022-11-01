@@ -110,17 +110,14 @@ static void testBasics(void)
    fflush(stdout);
 
    /* Test SymTable_new(). */
+
    oSymTable = SymTable_new();
    ASSURE(oSymTable != NULL);
-   printf("-- Made new\n");
-   fflush(stdout);
 
    /* Test SymTable_put() and SymTable_getLength(). */
 
    iSuccessful = SymTable_put(oSymTable, acJeter, acShortstop);
    ASSURE(iSuccessful);
-   printf("-- Added stuff\n");
-   fflush(stdout);
 
    uLength = SymTable_getLength(oSymTable);
    ASSURE(uLength == 1);
@@ -179,6 +176,7 @@ static void testBasics(void)
    ASSURE(! iFound);
 
    /* Test SymTable_get(). */
+
    pcValue = (char*)SymTable_get(oSymTable, acJeter);
    ASSURE(pcValue == acShortstop);
 
@@ -196,7 +194,6 @@ static void testBasics(void)
 
    pcValue = (char*)SymTable_get(oSymTable, "Maris");
    ASSURE(pcValue == NULL);
-
    
    /* Test SymTable_replace(). */
 
@@ -235,8 +232,6 @@ static void testBasics(void)
    uLength = SymTable_getLength(oSymTable);
    ASSURE(uLength == 5);
  
-printf("--- Fails here:\n");
-fflush(stdout);
 
    /* Test SymTable_free(). */
 
