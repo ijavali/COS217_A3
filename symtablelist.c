@@ -18,6 +18,7 @@ static size_t auBucketCounts[] = {509,  1021,  2039,  4093,
                                   8191, 16381, 32749, 65521};
 
 typedef struct Node Node;
+/* TODO: write definition here. talk about variable names */
 struct Node {
     /* Key for the binding */
     const char *key;
@@ -30,18 +31,15 @@ struct Node {
 struct SymTable {
     /* The first node in the linked list */
     struct Node *first;
-    /* Numer of bindings in symbol table */
+    /* Numer of nodes/bindings in symbol table */
     size_t numBindings;
-    /* Number of buckets in symbol table */
-    size_t size;
 };
 
 SymTable_T SymTable_new() {
     SymTable_T symtable = (struct SymTable *)malloc(sizeof(SymTable_T));
     if (symtable == NULL) return NULL;
-    symtable->size = BUCKET_COUNT;
-    symtable->numBindings = 0;
     symtable->first = NULL;
+    symtable->numBindings = 0;
     return symtable;
 }
 
@@ -50,12 +48,15 @@ int SymTable_put(SymTable_T oSymTable, const char *pcKey, const void *pvValue) {
     Node *prev;
     Node *temp = (Node *)malloc(sizeof(Node));
     if (temp == NULL) return 0;
-    temp->key = pcKey;
+    temp->key = (const char *)malloc(strlen(pcKey) + 1);
+    strcpy((char *)temp->key, pcKey);
     temp->value = (void *)pvValue;
     temp->next = NULL;
     if (head == NULL) {
         oSymTable->first = temp;
         oSymTable->numBindings++;
+        /* printf("Created %s %d %d %d\n", temp->key, temp, temp->key,
+               temp->value); */
         return 1;
     }
     prev = head;
@@ -65,8 +66,27 @@ int SymTable_put(SymTable_T oSymTable, const char *pcKey, const void *pvValue) {
         head = head->next;
     }
     oSymTable->numBindings++;
+   /*  printf("Created %s %d %d %d\n", temp->key, temp, temp->key, temp->value); */
     prev->next = temp;
     return 1;
+}
+
+void SymTable_free(SymTable_T oSymTable) {
+    Node *head = oSymTable->first;
+    Node *temp;
+    while (head != NULL) {
+        temp = head;
+        head = head->next;
+        char *k = temp->key;
+        /* printf(" removing %s %d %d %d\n", temp->key, temp, (char *)temp->key,
+               temp->value); */
+        free((char *)temp->key);
+        /* printf("   Fails below:\n "); */
+        /* free(temp->value); */
+        /*         free(temp->next); */
+        free(temp);
+    }
+    free(oSymTable);
 }
 
 int SymTable_contains(SymTable_T oSymTable, const char *pcKey) {
@@ -82,22 +102,6 @@ size_t SymTable_getLength(SymTable_T oSymTable) {
     return oSymTable->numBindings;
 }
 
-void SymTable_free(SymTable_T oSymTable) {
-    Node *head = oSymTable->first;
-    Node *temp;
-    while (head != NULL) {
-        temp = head;
-        head = head->next;
-        free((char *)temp->key);
-        free(temp->value);
-        free(temp->next);
-        free(temp);
-    }
-    free(oSymTable);
-}
-
-/* Applies function *pfApply to each binding in oSymTable, using pcKey, pcValue,
- * and pvExtra as arguments to *pfApply */
 void SymTable_map(SymTable_T oSymTable,
                   void (*pfApply)(const char *pcKey, void *pvValue,
                                   void *pvExtra),
@@ -133,6 +137,7 @@ void *SymTable_replace(SymTable_T oSymTable, const char *pcKey,
 }
 
 void *SymTable_remove(SymTable_T oSymTable, const char *pcKey) {
+    /* printf(" --------- \n"); */
     Node *head = oSymTable->first;
     Node *prev = head;
     while (head != NULL) {
@@ -144,8 +149,8 @@ void *SymTable_remove(SymTable_T oSymTable, const char *pcKey) {
                 prev->next = head->next;
             }
             free((char *)head->key);
-            free(head->value);
-            free(head->next);
+            /* free(head->value); */
+            /* free(head->next); */
             free(head);
             oSymTable->numBindings--;
             return original;

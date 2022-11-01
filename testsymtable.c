@@ -117,11 +117,11 @@ static void testBasics(void)
 
    /* Test SymTable_put() and SymTable_getLength(). */
 
+printf("-- Adding stuff\n");
+   fflush(stdout);
    iSuccessful = SymTable_put(oSymTable, acJeter, acShortstop);
    ASSURE(iSuccessful);
 /* CUSTOM */
-printf("-- Added stuff\n");
-   fflush(stdout);
 
    uLength = SymTable_getLength(oSymTable);
    ASSURE(uLength == 1);

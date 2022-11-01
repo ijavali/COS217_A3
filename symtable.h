@@ -11,7 +11,6 @@
 struct SymTable;
 typedef struct SymTable *SymTable_T;
 
-
 /*  The SymTable_T stores an unordered collection of key-value bindings where keys are unique.*/
 
 /* Return a new SymTable object that contains no bindings, or NULL if insufficient memory is available.*/ 

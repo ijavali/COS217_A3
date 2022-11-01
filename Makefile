@@ -7,7 +7,7 @@ all: testsymtablelist testsymtablehash
 clobber: clean
 	rm -f *~ \#*\#
 clean:
-	rm -f testintmath *.o
+	rm -f testsymtablehash testsymtablelist *.o
 
 # Dependency rules for file targets
 testsymtablelist: testsymtable.o symtablelist.o
